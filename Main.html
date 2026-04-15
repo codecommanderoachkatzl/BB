@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Good Girl Status</title>
+    <link rel="stylesheet" href="Style.css" />
+  </head>
+  <body>
+    <div class="heart-field" aria-hidden="true">
+      <span>♡</span><span>♥</span><span>♡</span><span>♥</span><span>♡</span>
+      <span>✦</span><span>♡</span><span>♥</span><span>♡</span><span>✧</span>
+    </div>
+
+    <main class="app" data-tier="gg">
+      <header class="hero">
+        <div class="topline">
+          <span class="mini-label">Status</span>
+          <button class="icon-button" id="resetButton" type="button" title="Daten zurücksetzen" aria-label="Daten zurücksetzen">↺</button>
+        </div>
+        <div class="status-lockup">
+          <p class="status-code" id="statusCode">GG</p>
+          <div>
+            <h1 id="statusName">Good Girl</h1>
+            <p id="statusMood">beste</p>
+          </div>
+        </div>
+        <div class="score-row">
+          <div>
+            <span id="scoreValue">100</span>
+            <small>Punkte</small>
+          </div>
+          <meter id="scoreMeter" min="0" max="130" value="100"></meter>
+        </div>
+        <p class="motivation-card" id="motivationText"></p>
+      </header>
+
+      <section class="section">
+        <div class="section-heading">
+          <h2>Streaks</h2>
+          <span id="bestStreak">0/365 Tage</span>
+        </div>
+
+        <div class="habit-grid">
+          <label class="field">
+            <span>Rauchfrei seit</span>
+            <input id="smokeDate" type="date" />
+          </label>
+          <label class="field">
+            <span>Alkoholfrei seit</span>
+            <input id="alcoholDate" type="date" />
+          </label>
+          <label class="field">
+            <span>Nicht fort seit</span>
+            <input id="partyDate" type="date" />
+          </label>
+        </div>
+
+        <div class="streak-list" id="streakList"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-heading">
+          <h2>Schule</h2>
+          <span id="gradeAverage">Ø -</span>
+        </div>
+
+        <form class="grade-form" id="gradeForm">
+          <label class="field compact">
+            <span>Fach</span>
+            <input id="subjectInput" type="text" autocomplete="off" placeholder="Mathe" required />
+          </label>
+
+          <label class="field compact">
+            <span>Art</span>
+            <select id="typeInput" required>
+              <option>Test</option>
+              <option>Schularbeit</option>
+            </select>
+          </label>
+
+          <label class="field compact">
+            <span>Note</span>
+            <select id="gradeInput" required>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+          </label>
+
+          <button class="primary-button" type="submit">＋ Eintrag</button>
+        </form>
+
+        <div class="grade-list" id="gradeList"></div>
+      </section>
+
+      <section class="section band">
+        <div class="section-heading">
+          <h2>Bewertung</h2>
+          <span id="tierRange">100+</span>
+        </div>
+        <div class="rule-list">
+          <div><b>90</b><span>Streaks</span></div>
+          <div><b>40</b><span>Noten</span></div>
+          <div><b>365</b><span>Tage Ziel</span></div>
+          <div><b>100+</b><span>GG</span></div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const storageKey = "good-girl-status-v1";
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const defaultData = {
+        smokeDate: "",
+        alcoholDate: "",
+        partyDate: "",
+        grades: []
+      };
+
+      const state = loadState();
+
+      const els = {
+        app: document.querySelector(".app"),
+        statusCode: document.getElementById("statusCode"),
+        statusName: document.getElementById("statusName"),
+        statusMood: document.getElementById("statusMood"),
+        scoreValue: document.getElementById("scoreValue"),
+        scoreMeter: document.getElementById("scoreMeter"),
+        motivationText: document.getElementById("motivationText"),
+        smokeDate: document.getElementById("smokeDate"),
+        alcoholDate: document.getElementById("alcoholDate"),
+        partyDate: document.getElementById("partyDate"),
+        streakList: document.getElementById("streakList"),
+        bestStreak: document.getElementById("bestStreak"),
+        gradeAverage: document.getElementById("gradeAverage"),
+        gradeForm: document.getElementById("gradeForm"),
+        subjectInput: document.getElementById("subjectInput"),
+        typeInput: document.getElementById("typeInput"),
+        gradeInput: document.getElementById("gradeInput"),
+        gradeList: document.getElementById("gradeList"),
+        tierRange: document.getElementById("tierRange"),
+        resetButton: document.getElementById("resetButton")
+      };
+
+      const habitConfig = [
+        { key: "smokeDate", label: "Rauchfrei", max: 30, milestones: [7, 14, 30, 60, 90, 180, 270, 365] },
+        { key: "alcoholDate", label: "Alkoholfrei", max: 30, milestones: [7, 14, 30, 60, 90, 180, 270, 365] },
+        { key: "partyDate", label: "Nicht fort", max: 30, milestones: [7, 14, 30, 60, 90, 180, 270, 365] }
+      ];
+
+      const motivationLines = [
+        "Du baust gerade eine Version von dir, auf die du richtig stolz sein kannst.",
+        "Heute zählt. Klein bleiben, aber dranbleiben.",
+        "Disziplin ist nicht streng, sie ist Selbstliebe mit Plan.",
+        "Ein guter Tag muss nicht perfekt sein. Er muss nur ehrlich weitergehen.",
+        "Du musst nicht alles auf einmal schaffen. Ein Schritt reicht.",
+        "Dein zukünftiges Ich sieht diesen Fortschritt und sagt danke.",
+        "Wiederstehen ist schwer, aber dein Glow-up ist stärker.",
+        "Du bist nicht hinterher. Du bist im Aufbau.",
+        "Jeder Tag ohne Rückfall ist ein Beweis, dass du es kannst.",
+        "Mach es für die Ruhe im Kopf und das Funkeln danach."
+      ];
+
+      const tiers = [
+        {
+          id: "gg",
+          code: "GG",
+          name: "Good Girl",
+          mood: "beste",
+          range: "100+"
+        },
+        {
+          id: "bad-bitch",
+          code: "BB",
+          name: "Bad Bitch",
+          mood: "gut",
+          range: "55-99"
+        },
+        {
+          id: "blede-blunzn",
+          code: "BB",
+          name: "Blede Blunzn",
+          mood: "schlecht",
+          range: "0-54"
+        }
+      ];
+
+      els.motivationText.textContent = randomMotivation();
+      hydrateFields();
+      render();
+
+      ["smokeDate", "alcoholDate", "partyDate"].forEach((key) => {
+        els[key].addEventListener("change", () => {
+          state[key] = els[key].value;
+          persist();
+          render();
+        });
+      });
+
+      els.gradeForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const subject = els.subjectInput.value.trim();
+        const type = els.typeInput.value;
+        const grade = Number(els.gradeInput.value);
+
+        if (!subject || !grade) return;
+
+        state.grades.unshift({
+          id: createId(),
+          subject,
+          type,
+          grade,
+          createdAt: new Date().toISOString()
+        });
+
+        els.subjectInput.value = "";
+        els.gradeInput.value = "1";
+        persist();
+        render();
+      });
+
+      els.gradeList.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-delete]");
+        if (!button) return;
+
+        state.grades = state.grades.filter((item) => item.id !== button.dataset.delete);
+        persist();
+        render();
+      });
+
+      els.resetButton.addEventListener("click", () => {
+        const confirmed = confirm("Alle Daten löschen?");
+        if (!confirmed) return;
+
+        Object.assign(state, structuredClone(defaultData));
+        hydrateFields();
+        persist();
+        render();
+      });
+
+      function render() {
+        const habitScores = habitConfig.map((habit) => {
+          const days = daysSince(state[habit.key]);
+          return {
+            ...habit,
+            days,
+            score: scoreHabit(days, habit.max, habit.milestones)
+          };
+        });
+
+        const habitTotal = habitScores.reduce((sum, item) => sum + item.score, 0);
+        const gradeScore = scoreGrades(state.grades);
+        const score = Math.round(habitTotal + gradeScore);
+        const tier = getTier(score);
+
+        document.body.dataset.tier = tier.id;
+        els.app.dataset.tier = tier.id;
+        els.statusCode.textContent = tier.code;
+        els.statusName.textContent = tier.name;
+        els.statusMood.textContent = tier.mood;
+        els.scoreValue.textContent = score;
+        els.scoreMeter.value = score;
+        els.tierRange.textContent = tier.range;
+
+        const best = Math.max(0, ...habitScores.map((item) => item.days));
+        els.bestStreak.textContent = `${Math.min(best, 365)}/365 Tage`;
+
+        els.streakList.innerHTML = habitScores
+          .map((item) => {
+            const percent = Math.min(100, Math.round((item.days / 365) * 100));
+            const nextMilestone = item.milestones.find((day) => item.days < day);
+            const detail = nextMilestone
+              ? `Noch ${nextMilestone - item.days} Tage bis ${nextMilestone}`
+              : "Jahresziel geschafft";
+            return `
+              <article class="streak-item">
+                <div>
+                  <strong>${item.label}</strong>
+                  <span>${item.days} ${item.days === 1 ? "Tag" : "Tage"} · ${detail}</span>
+                </div>
+                <div class="mini-meter" style="--fill:${percent}%"></div>
+                <b>${Math.round(item.score)}/${item.max}</b>
+              </article>
+            `;
+          })
+          .join("");
+
+        renderGrades();
+      }
+
+      function renderGrades() {
+        const grades = state.grades;
+        const average = grades.length
+          ? grades.reduce((sum, item) => sum + item.grade, 0) / grades.length
+          : 0;
+
+        els.gradeAverage.textContent = grades.length ? `Ø ${average.toFixed(2)}` : "Ø -";
+
+        if (!grades.length) {
+          els.gradeList.innerHTML = `<p class="empty-state">Noch keine Noten.</p>`;
+          return;
+        }
+
+        els.gradeList.innerHTML = grades
+          .map((item) => `
+            <article class="grade-card">
+              <div class="grade-badge">${item.grade}</div>
+              <div>
+                <strong>${escapeHtml(item.subject)}</strong>
+                <span>${item.type}</span>
+              </div>
+              <button class="icon-button quiet" type="button" data-delete="${item.id}" title="Eintrag löschen" aria-label="Eintrag löschen">×</button>
+            </article>
+          `)
+          .join("");
+      }
+
+      function scoreHabit(days, max, milestones) {
+        if (!days) return 0;
+
+        const reached = milestones.filter((day) => days >= day).length;
+        const milestoneScore = reached / milestones.length;
+        const yearlyProgress = Math.min(days / 365, 1);
+        const earlyBoost = Math.min(days / milestones[0], 1) * 0.1;
+        const score = Math.max(milestoneScore, yearlyProgress * 0.9, earlyBoost);
+        return Math.min(max, max * score);
+      }
+
+      function scoreGrades(grades) {
+        if (!grades.length) return 20;
+
+        const average = grades.reduce((sum, item) => sum + item.grade, 0) / grades.length;
+        const gradePoints = {
+          1: 40,
+          2: 32,
+          3: 24,
+          4: 12,
+          5: 0
+        };
+
+        const directScore = grades.reduce((sum, item) => sum + gradePoints[item.grade], 0) / grades.length;
+        const consistencyBonus = average <= 2 ? 3 : average <= 3 ? 1 : 0;
+        return Math.min(40, directScore + consistencyBonus);
+      }
+
+      function getTier(score) {
+        if (score >= 100) return tiers[0];
+        if (score >= 55) return tiers[1];
+        return tiers[2];
+      }
+
+      function daysSince(value) {
+        if (!value) return 0;
+        const date = new Date(`${value}T00:00:00`);
+        if (Number.isNaN(date.getTime()) || date > today) return 0;
+        return Math.floor((today - date) / 86400000);
+      }
+
+      function hydrateFields() {
+        els.smokeDate.value = state.smokeDate;
+        els.alcoholDate.value = state.alcoholDate;
+        els.partyDate.value = state.partyDate;
+      }
+
+      function loadState() {
+        try {
+          return { ...defaultData, ...JSON.parse(localStorage.getItem(storageKey)) };
+        } catch {
+          return structuredClone(defaultData);
+        }
+      }
+
+      function persist() {
+        localStorage.setItem(storageKey, JSON.stringify(state));
+      }
+
+      function createId() {
+        if (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function") {
+          return globalThis.crypto.randomUUID();
+        }
+
+        return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      }
+
+      function randomMotivation() {
+        return motivationLines[Math.floor(Math.random() * motivationLines.length)];
+      }
+
+      function escapeHtml(value) {
+        return value.replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;"
+        }[char]));
+      }
+    </script>
+  </body>
+</html>

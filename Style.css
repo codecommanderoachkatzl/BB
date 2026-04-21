@@ -305,14 +305,16 @@ select:focus {
 }
 
 .streak-list,
-.grade-list {
+.grade-list,
+.saving-list {
   display: grid;
   gap: 0.65rem;
   margin-top: 0.85rem;
 }
 
 .streak-item,
-.grade-card {
+.grade-card,
+.saving-card {
   min-height: 4.1rem;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -327,9 +329,22 @@ select:focus {
 }
 
 .streak-item > div:first-child,
-.grade-card > div:nth-child(2) {
+.grade-card > div:nth-child(2),
+.saving-card > div {
   display: grid;
   gap: 0.1rem;
+}
+
+.saving-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.saving-card b {
+  flex: 0 0 auto;
+  font-size: 1.05rem;
 }
 
 .mini-meter {

@@ -61,6 +61,31 @@
 
       <section class="section">
         <div class="section-heading">
+          <h2>Gespart</h2>
+          <span id="savedTotal">€ 0,00</span>
+        </div>
+
+        <div class="saving-list">
+          <article class="saving-card">
+            <div>
+              <strong>Fortgehen</strong>
+              <span>€ 50 pro Samstag</span>
+            </div>
+            <b id="partySavings">€ 0,00</b>
+          </article>
+
+          <article class="saving-card">
+            <div>
+              <strong>Rauchfrei</strong>
+              <span>€ 3,25 pro Tag</span>
+            </div>
+            <b id="smokeSavings">€ 0,00</b>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-heading">
           <h2>Schule</h2>
           <span id="gradeAverage">Ø -</span>
         </div>
@@ -137,6 +162,9 @@
         partyDate: document.getElementById("partyDate"),
         streakList: document.getElementById("streakList"),
         bestStreak: document.getElementById("bestStreak"),
+        savedTotal: document.getElementById("savedTotal"),
+        partySavings: document.getElementById("partySavings"),
+        smokeSavings: document.getElementById("smokeSavings"),
         gradeAverage: document.getElementById("gradeAverage"),
         gradeForm: document.getElementById("gradeForm"),
         subjectInput: document.getElementById("subjectInput"),
@@ -269,6 +297,7 @@
 
         const best = Math.max(0, ...habitScores.map((item) => item.days));
         els.bestStreak.textContent = `${Math.min(best, 365)}/365 Tage`;
+        renderSavings(habitScores);
 
         els.streakList.innerHTML = habitScores
           .map((item) => {
@@ -291,6 +320,18 @@
           .join("");
 
         renderGrades();
+      }
+
+      function renderSavings(habitScores) {
+        const smokeDays = habitScores.find((item) => item.key === "smokeDate")?.days ?? 0;
+        const partyDate = state.partyDate ? new Date(`${state.partyDate}T00:00:00`) : null;
+        const partySavings = partyDate ? countSaturdaysSince(partyDate) * 50 : 0;
+        const smokeSavings = smokeDays * 3.25;
+        const totalSavings = partySavings + smokeSavings;
+
+        els.partySavings.textContent = formatEuro(partySavings);
+        els.smokeSavings.textContent = formatEuro(smokeSavings);
+        els.savedTotal.textContent = formatEuro(totalSavings);
       }
 
       function renderGrades() {
@@ -389,6 +430,27 @@
 
       function randomMotivation() {
         return motivationLines[Math.floor(Math.random() * motivationLines.length)];
+      }
+
+      function countSaturdaysSince(startDate) {
+        if (Number.isNaN(startDate.getTime()) || startDate > today) return 0;
+
+        const cursor = new Date(startDate);
+        let saturdays = 0;
+
+        while (cursor <= today) {
+          if (cursor.getDay() === 6) saturdays += 1;
+          cursor.setDate(cursor.getDate() + 1);
+        }
+
+        return saturdays;
+      }
+
+      function formatEuro(value) {
+        return new Intl.NumberFormat("de-AT", {
+          style: "currency",
+          currency: "EUR"
+        }).format(value);
       }
 
       function escapeHtml(value) {

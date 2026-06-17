@@ -120,6 +120,23 @@
               Art des Dates
               <select id="typeInput"></select>
             </label>
+            <div class="date-time-block">
+              <label>
+                Datum
+                <input id="datePlanDateInput" type="date" />
+              </label>
+              <div class="field-grid">
+                <label>
+                  Von
+                  <input id="datePlanStartInput" type="time" />
+                </label>
+                <label>
+                  Bis
+                  <input id="datePlanEndInput" type="time" />
+                </label>
+              </div>
+              <div class="slot-suggestions" id="matchSuggestionList"></div>
+            </div>
             <label>
               Treffpunkt über Maps
               <div class="place-picker">
@@ -165,4 +182,5 @@
     </main>
   </body>
 </html>
+
 

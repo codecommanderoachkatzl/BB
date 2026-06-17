@@ -75,6 +75,10 @@ const els = {
   deletePastButton: document.querySelector("#deletePastButton"),
   dateIdeaForm: document.querySelector("#dateIdeaForm"),
   typeInput: document.querySelector("#typeInput"),
+  datePlanDateInput: document.querySelector("#datePlanDateInput"),
+  datePlanStartInput: document.querySelector("#datePlanStartInput"),
+  datePlanEndInput: document.querySelector("#datePlanEndInput"),
+  matchSuggestionList: document.querySelector("#matchSuggestionList"),
   placeInput: document.querySelector("#placeInput"),
   mapsSearchButton: document.querySelector("#mapsSearchButton"),
   mapPreview: document.querySelector("#mapPreview"),
@@ -148,12 +152,49 @@ function normalizePlace(place) {
   };
 }
 
+function normalizeIdea(idea) {
+  return {
+    ...idea,
+    status: idea.status || "open",
+    statusBy: idea.statusBy || "",
+    statusAt: idea.statusAt || ""
+  };
+}
+
 function normalizeData(data) {
   return {
     availability: Array.isArray(data?.availability) ? data.availability : [],
-    ideas: Array.isArray(data?.ideas) ? data.ideas : [],
+    ideas: Array.isArray(data?.ideas) ? data.ideas.map(normalizeIdea) : [],
     places: Array.isArray(data?.places) ? data.places.map(normalizePlace) : []
   };
+}
+
+function statusLabel(status) {
+  if (status === "accepted") return "Angenommen";
+  if (status === "rejected") return "Abgelehnt";
+  return "Offen";
+}
+
+function statusClass(status) {
+  if (status === "accepted") return "status-accepted";
+  if (status === "rejected") return "status-rejected";
+  return "status-open";
+}
+
+function acceptedDateEntries() {
+  return state.data.ideas
+    .filter((idea) => idea.status === "accepted" && idea.date && idea.start && idea.end)
+    .map((idea) => ({
+      id: `accepted-${idea.id}`,
+      ideaId: idea.id,
+      kind: "accepted-date",
+      date: idea.date,
+      start: idea.start,
+      end: idea.end,
+      userName: "Fixes Date",
+      mood: idea.type,
+      note: [idea.place, idea.details].filter(Boolean).join(" · ")
+    }));
 }
 
 function currentPlacePayload() {
@@ -259,6 +300,7 @@ function render() {
   renderAvailability();
   renderMatchCalendar();
   renderMatches();
+  renderDateMatchSuggestions();
   renderIdeas();
   renderPlaces();
 }
@@ -305,8 +347,17 @@ function matchesByDate() {
   }, {});
 }
 
+function acceptedDatesByDate() {
+  return acceptedDateEntries().reduce((groups, item) => {
+    groups[item.date] = groups[item.date] || [];
+    groups[item.date].push(item);
+    return groups;
+  }, {});
+}
+
 function renderMatchCalendar() {
   const matches = matchesByDate();
+  const acceptedDates = acceptedDatesByDate();
   const year = state.currentMonth.getFullYear();
   const month = state.currentMonth.getMonth();
   const monthName = state.currentMonth.toLocaleDateString("de-AT", { month: "long", year: "numeric" });
@@ -325,14 +376,17 @@ function renderMatchCalendar() {
     cellDate.setDate(startDate.getDate() + index);
     const key = localDateKey(cellDate);
     const dayMatches = matches[key] || [];
+    const dayAcceptedDates = acceptedDates[key] || [];
     const isCurrentMonth = cellDate.getMonth() === month;
     const isToday = key === todayIso();
     const label = dayMatches.length
       ? `<span class="calendar-dot">${dayMatches.length}</span>`
-      : "";
+      : dayAcceptedDates.length
+        ? `<span class="calendar-dot plan-dot">✓</span>`
+        : "";
 
     cells.push(`
-      <button class="calendar-day ${isCurrentMonth ? "" : "is-muted"} ${isToday ? "is-today" : ""} ${dayMatches.length ? "has-match" : ""}"
+      <button class="calendar-day ${isCurrentMonth ? "" : "is-muted"} ${isToday ? "is-today" : ""} ${dayMatches.length ? "has-match" : ""} ${dayAcceptedDates.length ? "has-plan" : ""}"
         type="button"
         data-action="select-calendar-day"
         data-date="${key}">
@@ -368,9 +422,26 @@ function renderMatches(filterDate = "") {
   `).join("");
 }
 
+function renderDateMatchSuggestions() {
+  const selectedDate = els.datePlanDateInput.value;
+  const today = todayIso();
+  const matches = computeMatches().filter((match) => match.date >= today && (!selectedDate || match.date === selectedDate));
+
+  if (!matches.length) {
+    els.matchSuggestionList.innerHTML = `<div class="suggestion-empty">Keine Überschneidung für diesen Tag.</div>`;
+    return;
+  }
+
+  els.matchSuggestionList.innerHTML = matches.map((match) => `
+    <button class="slot-suggestion" type="button" data-action="use-match-slot" data-date="${escapeHtml(match.date)}" data-start="${escapeHtml(match.start)}" data-end="${escapeHtml(match.end)}">
+      <strong>${escapeHtml(match.date)} · ${escapeHtml(match.start)}-${escapeHtml(match.end)}</strong>
+      <span>${escapeHtml(match.people.join(" & "))}</span>
+    </button>
+  `).join("");
+}
 function renderAvailability() {
   const today = todayIso();
-  const items = [...state.data.availability]
+  const items = [...state.data.availability, ...acceptedDateEntries()]
     .filter((item) => !item.date || item.date >= today)
     .sort((a, b) => `${a.date} ${a.start}`.localeCompare(`${b.date} ${b.start}`));
 
@@ -386,11 +457,13 @@ function renderAvailability() {
           <p class="item-title">${escapeHtml(item.date)} · ${escapeHtml(item.start)}-${escapeHtml(item.end)}</p>
           <p class="item-meta">${escapeHtml(item.userName)} · ${escapeHtml(item.mood)}</p>
         </div>
-        <span class="tag">${escapeHtml(item.mood)}</span>
+        <span class="tag ${item.kind === "accepted-date" ? "status-accepted" : ""}">${escapeHtml(item.kind === "accepted-date" ? "Fix" : item.mood)}</span>
       </div>
       ${item.note ? `<p class="item-note">${escapeHtml(item.note)}</p>` : ""}
       <div class="item-actions">
-        <button class="small-button danger" type="button" data-action="delete-availability" data-id="${item.id}">Löschen</button>
+        ${item.kind === "accepted-date"
+          ? `<button class="small-button" type="button" data-action="focus-idea" data-id="${item.ideaId}">Zum Vorschlag</button>`
+          : `<button class="small-button danger" type="button" data-action="delete-availability" data-id="${item.id}">Löschen</button>`}
       </div>
     </article>
   `).join("");
@@ -405,18 +478,23 @@ function renderIdeas() {
   els.ideaList.innerHTML = [...state.data.ideas].reverse().map((item) => {
     const placeLabel = item.place || item.placeName || "Ort offen";
     const url = item.mapsUrl || mapsUrl(placeLabel);
+    const dateLabel = item.date && item.start && item.end ? `${item.date} · ${item.start}-${item.end}` : "Zeit offen";
+    const status = item.status || "open";
     return `
-      <article class="item">
+      <article class="item" data-idea-id="${escapeHtml(item.id)}">
         <div class="item-main">
           <div>
             <p class="item-title">${escapeHtml(item.type)}</p>
-            <p class="item-meta">${escapeHtml(placeLabel)} · von ${escapeHtml(item.userName)}</p>
+            <p class="item-meta">${escapeHtml(dateLabel)} · ${escapeHtml(placeLabel)} · von ${escapeHtml(item.userName)}</p>
           </div>
-          <span class="tag">${escapeHtml(item.createdAt)}</span>
+          <span class="tag ${statusClass(status)}">${escapeHtml(statusLabel(status))}</span>
         </div>
         ${item.details ? `<p class="item-note">${escapeHtml(item.details)}</p>` : ""}
         <div class="item-actions">
           ${placeLabel !== "Ort offen" ? `<a class="small-button" href="${escapeHtml(url)}" target="_blank" rel="noopener">Maps</a>` : ""}
+          ${status !== "accepted" ? `<button class="small-button success" type="button" data-action="accept-idea" data-id="${item.id}">Annehmen</button>` : ""}
+          ${status !== "rejected" ? `<button class="small-button warning" type="button" data-action="reject-idea" data-id="${item.id}">Ablehnen</button>` : ""}
+          ${status !== "open" ? `<button class="small-button" type="button" data-action="open-idea" data-id="${item.id}">Wieder öffnen</button>` : ""}
           <button class="small-button danger" type="button" data-action="delete-idea" data-id="${item.id}">Löschen</button>
         </div>
       </article>
@@ -461,6 +539,14 @@ function renderMapPreview() {
 
 function setupDateTypes() {
   els.typeInput.innerHTML = dateTypes.map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`).join("");
+}
+
+async function updateIdeaStatus(id, status) {
+  await persist({
+    ideas: state.data.ideas.map((idea) => idea.id === id
+      ? { ...idea, status, statusBy: state.userName, statusAt: todayIso() }
+      : idea)
+  });
 }
 
 async function addPlace(placeInput) {
@@ -539,18 +625,38 @@ els.dateIdeaForm.addEventListener("submit", async (event) => {
     id: uid(),
     userName: state.userName,
     type: els.typeInput.value,
+    date: els.datePlanDateInput.value,
+    start: els.datePlanStartInput.value,
+    end: els.datePlanEndInput.value,
     place: place?.name || "",
     address: place?.address || "",
     mapsUrl: place?.mapsUrl || (place?.name ? mapsUrl(place.name) : ""),
     details: els.detailsInput.value.trim(),
-    createdAt: todayIso()
+    createdAt: todayIso(),
+    status: "open",
+    statusBy: "",
+    statusAt: ""
   };
 
   await persist({ ideas: [...state.data.ideas, item] });
   if (place) await addPlace(place);
   els.dateIdeaForm.reset();
+  els.datePlanDateInput.value = todayIso();
   state.selectedPlace = null;
   renderMapPreview();
+  renderDateMatchSuggestions();
+});
+
+els.datePlanDateInput.addEventListener("change", () => {
+  renderDateMatchSuggestions();
+});
+
+els.datePlanStartInput.addEventListener("change", () => {
+  renderDateMatchSuggestions();
+});
+
+els.datePlanEndInput.addEventListener("change", () => {
+  renderDateMatchSuggestions();
 });
 
 els.placeInput.addEventListener("input", () => {
@@ -598,6 +704,18 @@ document.addEventListener("click", async (event) => {
   if (action === "delete-idea") {
     await persist({ ideas: state.data.ideas.filter((item) => item.id !== id) });
   }
+  if (action === "accept-idea") {
+    await updateIdeaStatus(id, "accepted");
+  }
+  if (action === "reject-idea") {
+    await updateIdeaStatus(id, "rejected");
+  }
+  if (action === "open-idea") {
+    await updateIdeaStatus(id, "open");
+  }
+  if (action === "focus-idea") {
+    document.querySelector(`[data-idea-id="${CSS.escape(id)}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
   if (action === "delete-place") {
     await persist({ places: state.data.places.filter((item) => item.id !== id) });
   }
@@ -610,7 +728,16 @@ document.addEventListener("click", async (event) => {
     renderMapPreview();
   }
   if (action === "select-calendar-day") {
+    els.datePlanDateInput.value = date;
     renderMatches(date);
+    renderDateMatchSuggestions();
+  }
+  if (action === "use-match-slot") {
+    els.datePlanDateInput.value = date;
+    els.datePlanStartInput.value = target.dataset.start;
+    els.datePlanEndInput.value = target.dataset.end;
+    renderDateMatchSuggestions();
+    els.dateIdeaForm.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 });
 
@@ -619,7 +746,9 @@ async function boot() {
   els.dateInput.value = todayIso();
   els.startInput.value = "18:00";
   els.endInput.value = "21:00";
+  els.datePlanDateInput.value = todayIso();
   renderMapPreview();
+  renderDateMatchSuggestions();
 
   const saved = getSavedLogin();
   if (!saved) return;
@@ -635,5 +764,9 @@ async function boot() {
 }
 
 boot();
+
+
+
+
 
 

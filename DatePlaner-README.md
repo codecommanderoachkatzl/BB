@@ -8,7 +8,8 @@ Statische GitHub-Pages-Webseite für zwei Personen mit Firebase Firestore als ge
 - Gemeinsame Zeiten werden live über Firebase synchronisiert.
 - Überschneidungen werden automatisch berechnet und in einer Monats-Kalenderansicht angezeigt.
 - Vergangene Zeit-Einträge werden beim Öffnen automatisch gelöscht und können zusätzlich manuell gelöscht werden.
-- Date-Ideen, Lieblingsorte und Maps-Links ohne Google-API-Key.
+- Date-Ideen mit Datum/Zeit, passenden Überschneidungsvorschlägen, Annehmen/Ablehnen, Lieblingsorten und Maps-Links ohne Google-API-Key.
+- Angenommene Date-Vorschläge erscheinen automatisch als fixe Date-Einträge in der Kalender-/Zeitenansicht.
 - Oberfläche ist für Handy hochkant priorisiert.
 
 ## Firebase
@@ -27,4 +28,6 @@ Das gemeinsame Passwort wird nicht gespeichert. Am Gerät wird nur der daraus be
 ## Maps
 
 Es wird kein Google Maps API-Key benötigt. Orte werden über normale Google-Maps-Links und eine eingebettete Suchkarte geöffnet.
+
+
 

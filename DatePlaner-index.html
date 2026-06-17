@@ -1,0 +1,168 @@
+﻿<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Date Planner</title>
+    <link rel="stylesheet" href="DatePlaner-styles.css" />
+    <script type="module" src="DatePlaner-app.js"></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="login-view" id="loginView">
+        <form class="login-panel" id="loginForm">
+          <div class="login-title">
+            <p class="eyebrow">Date Planner</p>
+            <h1>Anmelden</h1>
+          </div>
+          <label>
+            Dein Name
+            <input id="userName" autocomplete="name" required placeholder="z. B. Phili" />
+          </label>
+          <label>
+            Raumname
+            <input id="roomName" required placeholder="z. B. Sommer 2026" />
+          </label>
+          <label>
+            Gemeinsames Passwort
+            <input id="roomPassword" type="password" required minlength="4" placeholder="Mindestens 4 Zeichen" />
+          </label>
+          <button type="submit">Planer öffnen</button>
+          <p class="mode-hint" id="modeHint"></p>
+        </form>
+      </section>
+
+      <section class="planner-view is-hidden" id="plannerView" aria-live="polite">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="roomLabel">Gemeinsamer Raum</p>
+            <h1>Date Planner</h1>
+          </div>
+          <div class="topbar-actions">
+            <span class="sync-badge" id="syncBadge">Firebase</span>
+            <button class="ghost-button" id="logoutButton" type="button">Abmelden</button>
+          </div>
+        </header>
+
+        <section class="dashboard-grid">
+          <form class="panel availability-panel" id="availabilityForm">
+            <div class="panel-heading compact-heading">
+              <div>
+                <p class="eyebrow">Kalender</p>
+                <h2>Zeit eintragen</h2>
+              </div>
+            </div>
+            <div class="field-grid">
+              <label>
+                Datum
+                <input id="dateInput" type="date" required />
+              </label>
+              <label>
+                Von
+                <input id="startInput" type="time" required />
+              </label>
+              <label>
+                Bis
+                <input id="endInput" type="time" required />
+              </label>
+              <label>
+                Stimmung
+                <select id="moodInput">
+                  <option value="frei">Frei</option>
+                  <option value="vielleicht">Vielleicht</option>
+                  <option value="lieber ruhig">Lieber ruhig</option>
+                  <option value="energie">Energie für Action</option>
+                </select>
+              </label>
+            </div>
+            <label>
+              Notiz
+              <textarea id="noteInput" rows="2" placeholder="z. B. nach 18:00 besser"></textarea>
+            </label>
+            <button type="submit">Zeit speichern</button>
+          </form>
+
+          <section class="panel match-panel priority-panel">
+            <div class="panel-heading calendar-heading">
+              <div>
+                <p class="eyebrow">Gemeinsam frei</p>
+                <h2>Überschneidungen</h2>
+              </div>
+              <div class="month-controls">
+                <button class="icon-button" id="prevMonthButton" type="button" aria-label="Vorheriger Monat">‹</button>
+                <span id="monthLabel"></span>
+                <button class="icon-button" id="nextMonthButton" type="button" aria-label="Nächster Monat">›</button>
+              </div>
+            </div>
+            <div class="match-calendar" id="matchCalendar"></div>
+            <div class="match-list" id="matchList"></div>
+          </section>
+
+          <section class="panel calendar-panel">
+            <div class="panel-heading compact-heading">
+              <div>
+                <p class="eyebrow">Alle Einträge</p>
+                <h2>Zeiten</h2>
+              </div>
+              <button class="ghost-button" id="deletePastButton" type="button">Vergangenes löschen</button>
+            </div>
+            <div class="calendar-list" id="availabilityList"></div>
+          </section>
+
+          <form class="panel date-panel" id="dateIdeaForm">
+            <div class="panel-heading compact-heading">
+              <div>
+                <p class="eyebrow">Ideen</p>
+                <h2>Date planen</h2>
+              </div>
+            </div>
+            <label>
+              Art des Dates
+              <select id="typeInput"></select>
+            </label>
+            <label>
+              Treffpunkt über Maps
+              <div class="place-picker">
+                <input id="placeInput" list="favoritePlaces" placeholder="Ort, Adresse oder Lieblingsplatz" />
+                <button class="ghost-button" id="mapsSearchButton" type="button">Maps</button>
+              </div>
+              <datalist id="favoritePlaces"></datalist>
+            </label>
+            <div class="map-preview" id="mapPreview">
+              <span>Ort eingeben und mit Maps öffnen.</span>
+            </div>
+            <label>
+              Details
+              <textarea id="detailsInput" rows="2" placeholder="Tickets, Uhrzeit, Snacks..."></textarea>
+            </label>
+            <div class="button-row">
+              <button type="submit">Vorschlag speichern</button>
+              <button class="ghost-button" id="saveFavoriteButton" type="button">Ort merken</button>
+            </div>
+          </form>
+
+          <section class="panel ideas-panel">
+            <div class="panel-heading compact-heading">
+              <div>
+                <p class="eyebrow">Board</p>
+                <h2>Date-Vorschläge</h2>
+              </div>
+            </div>
+            <div class="idea-list" id="ideaList"></div>
+          </section>
+
+          <section class="panel places-panel">
+            <div class="panel-heading compact-heading">
+              <div>
+                <p class="eyebrow">Schnellauswahl</p>
+                <h2>Lieblingsorte</h2>
+              </div>
+            </div>
+            <div class="place-list" id="placeList"></div>
+          </section>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>
+

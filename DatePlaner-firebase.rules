@@ -1,0 +1,13 @@
+﻿rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /datePlannerRooms/{roomId} {
+      allow read: if request.auth != null
+        && roomId.matches('^[a-f0-9]{64}$');
+
+      allow create, update: if request.auth != null
+        && roomId.matches('^[a-f0-9]{64}$')
+        && request.resource.data.keys().hasOnly(['availability', 'ideas', 'places', 'updatedAt']);
+    }
+  }
+}

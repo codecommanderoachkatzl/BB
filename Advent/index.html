@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="de-AT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#10333b">
+  <title>Adventlichter · Adventmärkte 2026</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="markets.js" defer></script>
+  <script src="calendar.js" defer></script>
+  <script src="snow.js" defer></script>
+</head>
+<body>
+  <header><div class="wrap bar"><a class="brand" href="#anfang"><span aria-hidden="true">❄</span> Adventlichter</a><span class="edition">Marktkalender <b>2026</b></span></div></header>
+  <main id="anfang">
+    <section class="hero">
+      <div class="wrap hero-inner">
+        <p class="kicker"><span></span> Vanni's und Phili's Advent</p>
+        <h1>Adventmärkte<br><em>im Lichterglanz</em></h1>
+        <a class="jump" href="#kalender">Zum Kalender <span aria-hidden="true">↓</span></a>
+      </div>
+    </section>
+    <section class="wrap calendar" id="kalender">
+      <div class="heading"><div><p class="kicker dark"><span></span> NOVEMBER — DEZEMBER 2026</p><h2>Der Marktkalender</h2></div>
+        <label class="select-wrap"><span aria-hidden="true">☷</span><select id="region" aria-label="Nach Region filtern"><option value="">Alle Regionen</option><option>Waldviertel</option><option>Mühlviertel</option><option>Wachau</option></select></label>
+      </div>
+      <div class="legend"><span><i class="lamp on"></i> Heute &amp; vergangen</span><span><i class="lamp"></i> Bevorstehend</span><span class="hint">Ein Licht pro Tag</span></div>
+      <div id="timeline"></div>
+      <noscript>Bitte aktiviere JavaScript, um die Termine und Tageslichter anzuzeigen.</noscript>
+    </section>
+  </main>
+  <footer class="wrap"><span>❄ &nbsp; Adventlichter 2026</span><a href="../">Zur Startseite ↗</a></footer>
+  <canvas id="snow" aria-hidden="true"></canvas>
+</body>
+</html>

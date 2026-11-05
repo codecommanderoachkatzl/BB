@@ -306,6 +306,15 @@ const markets = [
     "note": "Kunsthandwerk und Kulinarik am Marktplatz in Ried."
   },
   {
+    "name": "Dorfweihnacht Schönbach",
+    "place": "Schönbach · Klosterhof, Schönbach 2",
+    "region": "Waldviertel",
+    "start": "2026-12-12",
+    "end": "2026-12-13",
+    "url": "https://www.waldviertel.at/veranstaltungen/dorfweihnacht-schoenbach-2026",
+    "note": "Samstag und Sonntag jeweils 9–19 Uhr."
+  },
+  {
     "name": "Weihnachtsjahrmarkt",
     "place": "Groß Gerungs · Hauptplatz",
     "region": "Waldviertel",

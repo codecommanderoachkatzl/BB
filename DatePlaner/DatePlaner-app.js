@@ -1,4 +1,4 @@
-﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
 import {
   doc,
@@ -588,6 +588,10 @@ els.logoutButton.addEventListener("click", () => {
   setView(false);
   els.roomPassword.value = "";
 });
+
+for (const input of [els.startInput, els.endInput]) {
+  input.addEventListener("input", () => els.endInput.setCustomValidity(""));
+}
 
 els.availabilityForm.addEventListener("submit", async (event) => {
   event.preventDefault();

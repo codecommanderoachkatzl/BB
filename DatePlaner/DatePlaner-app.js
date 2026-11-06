@@ -26,7 +26,9 @@ const dateTypes = [
   "Konzert",
   "Brunch",
   "Roadtrip mini",
-  "Wellness zuhause"
+  "Wellness zuhause",
+  "Adventmarkt",
+  "Ball"
 ];
 
 const savedLoginKey = "date-planner-login";
